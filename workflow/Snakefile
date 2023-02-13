@@ -1,0 +1,28 @@
+import warnings
+from pathlib import Path
+import snakemake.io as io
+from snakemake.utils import min_version
+
+##### set minimum snakemake version #####
+min_version("7.14.0")
+
+# IMPORT CONFIG VARIABLES
+configfile: "config/config.yaml"
+
+
+out = "results/"
+
+rule all:
+    input:
+        ["results/split/ref.pgen"]
+
+module split:
+    snakefile: "rules/split.smk"
+    config: config["split"]
+
+module simulate:
+    snakefile: "rules/simulate.smk"
+    config: config["simulate"]
+
+use rule * from split as split_*
+# use rule * from simulate as simulate_*
