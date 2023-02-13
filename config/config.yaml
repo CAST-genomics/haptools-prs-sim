@@ -1,0 +1,8 @@
+split:
+  # 1000G reference panel from https://www.cog-genomics.org/plink/2.0/resources
+  # 2022-08-04 Byrska-Bishop et al. (build 38, 3202 samples, contigs unphased)
+  reference: resources/all_hg38.pgen
+  # which super populations do we want to evaluate portability for?
+  super_populations: [EUR, EAS, AFR]
+simulate:
+  hi
