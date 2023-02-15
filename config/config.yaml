@@ -4,5 +4,8 @@ split:
   reference: resources/all_hg38.pgen
   # which super populations do we want to evaluate portability for?
   super_populations: [EUR, AFR]
+  maf_threshold: 0.05
+  hwe_threshold: 1e-6
+  num_causal_vars: 1000
 simulate:
   hi
