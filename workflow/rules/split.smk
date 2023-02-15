@@ -53,11 +53,11 @@ rule extract_snps_only:
 
 rule choose_train_test_validate_samples:
     input:
-        psam = rules.extract_snps_only.output.psam,
+        sample_info = rules.create_sample_info.output.sample_info,
     output:
-        training = out+"/samples_split/training.tsv",
-        testing = out+"/samples_split/testing.tsv",
-        validation = out+"/samples_split/validation.tsv",
+        training = out+"samples_split/training.tsv",
+        testing = out+"samples_split/testing.tsv",
+        validation = out+"samples_split/validation.tsv",
     resources:
         runtime="0:05:00",
     log:
@@ -67,4 +67,5 @@ rule choose_train_test_validate_samples:
     conda:
         "../envs/default.yml"
     shell:
-        " >{output.sample_info} 2>{log}"
+        "workflow/scripts/train_test_validate_split.py {input.sample_info} "
+        "{output.training} {output.testing} {output.validation} 2>{log}"
