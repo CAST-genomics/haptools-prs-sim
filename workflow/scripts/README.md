@@ -6,3 +6,6 @@ All python scripts implement the `--help` argument. For R scripts, you can run `
 
 ### [train_test_validate_split.py](train_test_validate_split.py)
 A python script that splits your samples into a set of training, testing, and validation sets, whilst maintaining the population fractions.
+
+### [choose_variants.py](choose_variants.py)
+A python script that randomly chooses causal SNPs to use in our simulation, such that they come from a wide distribution of allele frequencies. It outputs a `.hap` file suitable for `simphenotype`.
