@@ -39,7 +39,7 @@ rule choose_train_test_validate_samples:
         testing = out+"samples_split/testing.tsv",
         validation = out+"samples_split/validation.tsv",
     resources:
-        runtime="0:05:00",
+        runtime="0:10:00",
     log:
         out+"logs/choose_train_test_validate_samples/samples_split.log"
     benchmark:
@@ -53,7 +53,8 @@ rule choose_train_test_validate_samples:
 rule subset_dataset:
     """
         create training/testing/validation based on 'type' wildcard
-        also, exclude anything that isn't a SNP and the non-canonical chroms
+        also, exclude the non-canonical chroms and anything that isn't a SNP
+        or a SNP with a low MAF
     """
     input:
         pgen = config["reference"],
@@ -65,6 +66,7 @@ rule subset_dataset:
     params:
         in_prefix = lambda w, input: Path(input.pgen).with_suffix(""),
         out_prefix = lambda w, output: Path(output.pgen).with_suffix(""),
+        maf_thresh = config["maf_thresh"],
     output:
         pgen = temp(out+"datasets/{type}.pgen"),
         pvar = temp(out+"datasets/{type}.pvar"),
@@ -79,7 +81,8 @@ rule subset_dataset:
     conda:
         "../envs/default.yml"
     shell:
-        "plink2 --snps-only 'just-acgt' --aec --chr 1-22, XY "
-        "--keep <(cut -f1 {input.samples}) "
+        # TODO: add --hwe and --geno params?
+        "plink2 --snps-only 'just-acgt' --aec --chr 1-22, XY --nonfounders "
+        "--keep <(cut -f1 {input.samples}) --maf {params.maf_thresh} "
         "--make-pgen erase-dosage 'pvar-cols=' 'psam-cols=' "
         "--pfile {params.in_prefix} vzs --out {params.out_prefix} &>{log}"
