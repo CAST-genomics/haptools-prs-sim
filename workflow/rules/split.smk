@@ -5,6 +5,10 @@ out = "results/split/"
 
 
 rule create_sample_info:
+    """
+        subset sampleID and superpopulation column for desired populations
+        and exclude header
+    """
     input:
         psam = Path(config["reference"]).with_suffix(".psam"),
     params:
@@ -23,35 +27,11 @@ rule create_sample_info:
         "cut -f1,5 {input.psam} | tail -n+2 | "
         "grep -P '\\t({params.pops})$' >{output.sample_info} 2>{log}"
 
-rule extract_snps_only:
-    input:
-        pgen = config["reference"],
-        pvar = Path(config["reference"]).with_suffix(".pvar.zst"),
-        psam = Path(config["reference"]).with_suffix(".psam"),
-        samples = rules.create_sample_info.output,
-    params:
-        in_prefix = lambda w, input: Path(input.pgen).with_suffix(""),
-        out_prefix = lambda w, output: Path(output.pgen).with_suffix(""),
-    output:
-        pgen = out+"ref.pgen",
-        pvar = out+"ref.pvar",
-        psam = out+"ref.psam",
-        log = temp(out+"ref.log"),
-    resources:
-        runtime="1:00:00",
-    log:
-        out+"logs/extract_snps_only/ref.log"
-    benchmark:
-        out+"bench/extract_snps_only/ref.txt"
-    conda:
-        "../envs/default.yml"
-    shell:
-        "plink2 --snps-only 'just-acgt' --aec --chr 1-22, XY "
-        "--keep <(cut -f1 {input.samples}) "
-        "--make-pgen erase-dosage 'pvar-cols=' 'psam-cols=' "
-        "--pfile {params.in_prefix} vzs --out {params.out_prefix} &>{log}"
-
 rule choose_train_test_validate_samples:
+    """
+        randomly choose samples (stratified by superpopulation label) for
+        training/testing/validation from the sample_info file
+    """
     input:
         sample_info = rules.create_sample_info.output.sample_info,
     output:
@@ -69,3 +49,37 @@ rule choose_train_test_validate_samples:
     shell:
         "workflow/scripts/train_test_validate_split.py {input.sample_info} "
         "{output.training} {output.testing} {output.validation} 2>{log}"
+
+rule subset_dataset:
+    """
+        create training/testing/validation based on 'type' wildcard
+        also, exclude anything that isn't a SNP and the non-canonical chroms
+    """
+    input:
+        pgen = config["reference"],
+        pvar = Path(config["reference"]).with_suffix(".pvar.zst"),
+        psam = Path(config["reference"]).with_suffix(".psam"),
+        samples = lambda w: getattr(
+            rules.choose_train_test_validate_samples.output, w.type
+        ),
+    params:
+        in_prefix = lambda w, input: Path(input.pgen).with_suffix(""),
+        out_prefix = lambda w, output: Path(output.pgen).with_suffix(""),
+    output:
+        pgen = temp(out+"datasets/{type}.pgen"),
+        pvar = temp(out+"datasets/{type}.pvar"),
+        psam = temp(out+"datasets/{type}.psam"),
+        log = temp(out+"datasets/{type}.log"),
+    resources:
+        runtime="0:10:00",
+    log:
+        out+"logs/extract_snps_only/ref.log"
+    benchmark:
+        out+"bench/extract_snps_only/ref.txt"
+    conda:
+        "../envs/default.yml"
+    shell:
+        "plink2 --snps-only 'just-acgt' --aec --chr 1-22, XY "
+        "--keep <(cut -f1 {input.samples}) "
+        "--make-pgen erase-dosage 'pvar-cols=' 'psam-cols=' "
+        "--pfile {params.in_prefix} vzs --out {params.out_prefix} &>{log}"
