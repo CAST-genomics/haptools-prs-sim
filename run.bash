@@ -64,7 +64,7 @@ fi
 exit_code="$?"
 if command -v 'slack' &>/dev/null; then
     if [ "$exit_code" -eq 0 ]; then
-        slack "snakemake finished successfully" &>/dev/null
+        slack "prsim finished successfully" &>/dev/null
     else
         slack "snakemake haptools-prs-sim job failed" &>/dev/null
         slack "$(tail -n4 "logs/log")" &>/dev/null
