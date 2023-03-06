@@ -4,8 +4,11 @@ split:
   reference: resources/all_hg38.pgen
   # which super populations do we want to evaluate portability for?
   super_populations: [EUR, AFR]
+  # When choosing SNPs to include in the simulation, exclude any that do pass these thresholds:
   maf_threshold: 0.05
   hwe_threshold: 1e-6
+  missing_threshold: 0.2
+  # How many SNPs should we include in our simulation?
   num_causal_vars: 1000
 simulate:
   hi

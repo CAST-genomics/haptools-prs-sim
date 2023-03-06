@@ -14,7 +14,7 @@ out = "results/"
 
 rule all:
     input:
-        ["results/split/ref.pgen"]
+        ["results/split/datasets/training.pgen"]
 
 module split:
     snakefile: "rules/split.smk"
